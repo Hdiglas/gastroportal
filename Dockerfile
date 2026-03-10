@@ -8,7 +8,7 @@ RUN apk add --no-cache python3 make g++
 
 # Dependencies
 COPY package*.json ./
-RUN npm ci --omit=dev
+RUN npm ci --omit=dev --ignore-scripts
 
 # App + Prisma
 COPY . .
