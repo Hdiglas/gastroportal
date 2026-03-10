@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
+import { batchCategorizeEmails } from "@/lib/ai/batch-categorize";
 import { decrypt } from "@/lib/encryption";
 import { ImapFlow } from "imapflow";
 import { simpleParser } from "mailparser";
@@ -35,6 +36,15 @@ export async function POST(request: Request) {
           fetched: 0,
           error: error instanceof Error ? error.message : "Unbekannt",
         });
+      }
+    }
+
+    const totalFetched = results.reduce((s, r) => s + r.fetched, 0);
+    if (totalFetched > 0) {
+      try {
+        await batchCategorizeEmails(20);
+      } catch {
+        /* Kategorisierung optional – Sync war erfolgreich */
       }
     }
 
