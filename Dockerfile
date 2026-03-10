@@ -3,6 +3,9 @@ FROM node:22-alpine
 
 WORKDIR /app
 
+# Build-Tools für native Module (z.B. mailparser)
+RUN apk add --no-cache python3 make g++
+
 # Dependencies
 COPY package*.json ./
 RUN npm ci --omit=dev
