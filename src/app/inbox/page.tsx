@@ -293,13 +293,28 @@ export default function InboxPage() {
     try {
       const syncRes = await fetch("/api/emails/sync", { method: "POST" });
       const syncData = await syncRes.json();
+      let totalFetched = 0;
       if (syncData.results) {
         const errors = syncData.results.filter((r: { success: boolean }) => !r.success).map((r: { email: string; error?: string }) => `${r.email}: ${r.error}`).join("\n");
         if (errors) setSyncError(errors);
-        const totalFetched = syncData.results.reduce((s: number, r: { fetched: number }) => s + r.fetched, 0);
-        if (totalFetched > 0) setSyncSuccess(`${totalFetched} neue E-Mails geladen`);
+        totalFetched = syncData.results.reduce((s: number, r: { fetched: number }) => s + r.fetched, 0);
       }
       await fetchEmails();
+      await fetchAllEmails();
+
+      if (totalFetched > 0) {
+        setSyncSuccess(`${totalFetched} neue E-Mails geladen. KI kategorisiert und fasst zusammen...`);
+        try {
+          await fetch("/api/ai/batch-categorize", { method: "POST" });
+          await fetchEmails();
+          await fetchAllEmails();
+          setSyncSuccess(`${totalFetched} neue E-Mails geladen, Kategorie und Kurzzusammenfassung generiert.`);
+        } catch {
+          setSyncSuccess(`${totalFetched} neue E-Mails geladen. Hinweis: KI-Kategorisierung fehlgeschlagen.`);
+        }
+      } else if (syncData.results?.length) {
+        setSyncSuccess("Aktualisiert.");
+      }
     } catch { setSyncError("Netzwerkfehler"); }
     setSyncing(false);
   };

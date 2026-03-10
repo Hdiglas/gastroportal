@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Settings, Mail, Bot, Database, MapPin, Building2, FileText } from "lucide-react";
+import { Settings, Mail, Bot, Database, MapPin, Building2, FileText, RefreshCw } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 const SECTIONS = [
@@ -40,6 +40,12 @@ const SECTIONS = [
     icon: FileText,
     title: "Templates",
     description: "E-Mail-Vorlagen fuer automatische Antworten",
+  },
+  {
+    href: "/settings/update",
+    icon: RefreshCw,
+    title: "System Update",
+    description: "Neueste Version von Docker Hub pullen und neu starten",
   },
 ];
 

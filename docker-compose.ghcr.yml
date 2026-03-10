@@ -2,12 +2,15 @@
 # Nach Push wird das Image automatisch gebaut. Hier nur pullen und starten.
 services:
   gastromail:
-    # Image von Docker Hub – wird bei jedem Push neu gebaut
     image: hdiglas/gastroportal:latest
     container_name: gastromail
     ports:
       - "3000:3000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /volume1/docker/gastroportal:/deploy:ro
     environment:
       - DATABASE_URL=postgresql://hdiglas:sadkjsd7826387%21%21%21%40askgdlj%2F%2F%26%25@192.168.1.153:44391/Master?schema=public
       - ENCRYPTION_SECRET=gastromail-change-this-secret-in-production
+      - DEPLOY_PATH=/deploy
     restart: unless-stopped

@@ -29,10 +29,12 @@ git push -u origin main
 ## Ugreen NAS – Nur YAML + Image (empfohlen)
 
 1. **docker-compose.ghcr.yml** auf die NAS kopieren (Pfad: `/volume1/docker/gastroportal/docker-compose.yaml`)
-2. In der YAML: `image: hdiglas/gastroportal:latest` (Docker Hub)
+2. Wichtig: Volume-Mounts für den **Update-Button** (Einstellungen → System Update):
+   - `/var/run/docker.sock` und `/volume1/docker/gastroportal:/deploy`
+   - Env: `DEPLOY_PATH=/deploy`
 3. Projekt erstellen → **Importieren** oder Inhalt einfügen → **Bereitstellen**
 
-Das Image wird von Docker Hub gezogen. Bei Updates: **Projekt stoppen → `sudo docker pull hdiglas/gastroportal:latest` → Starten**.
+**Updates:** Einstellungen → System Update → „Update ausführen“ klicken. Oder manuell: `sudo docker pull hdiglas/gastroportal:latest` und `docker compose up -d`.
 
 ---
 
