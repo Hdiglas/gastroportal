@@ -1,0 +1,13 @@
+# Für Ugreen NAS – nutzt fertiges Image von GitHub (ghcr.io)
+# Nach Push wird das Image automatisch gebaut. Hier nur pullen und starten.
+services:
+  gastromail:
+    # Image von GitHub – wird bei jedem Push neu gebaut
+    image: ghcr.io/hdiglas/gastroportal:latest
+    container_name: gastromail
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://hdiglas:sadkjsd7826387%21%21%21%40askgdlj%2F%2F%26%25@192.168.1.153:44391/Master?schema=public
+      - ENCRYPTION_SECRET=gastromail-change-this-secret-in-production
+    restart: unless-stopped

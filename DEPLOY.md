@@ -1,6 +1,11 @@
 # Deployment – Gastroportal
 
-Automatisches Deploy via Git Push: Bei jedem Push auf `main` oder `master` wird auf dem Server neu gebaut und deployed.
+## Automatisches Image-Build (GitHub Container Registry)
+
+Bei jedem Push auf `main` oder `master` wird das Docker-Image automatisch gebaut und nach **ghcr.io** gepusht.
+
+- **Image:** `ghcr.io/hdiglas/gastroportal:latest` (falls Repo unter Hdiglas/gastroportal)
+- Kein manueller Build nötig – einfach `git push`
 
 ## Git einrichten (falls noch nicht geschehen)
 
@@ -21,7 +26,21 @@ git push -u origin main
 
 ---
 
-## 1. Server vorbereiten (einmalig)
+## Ugreen NAS – Nur YAML + Image (empfohlen)
+
+Wenn du das Image von GitHub nutzt, brauchst du **kein** Projekt auf der NAS, nur die Compose-Datei:
+
+1. **docker-compose.ghcr.yml** auf die NAS kopieren (oder Inhalt in die Docker-App einfügen)
+2. Projekt erstellen → **Importieren** und die Datei wählen, oder den Inhalt einfügen
+3. **Bereitstellen** klicken
+
+Das Image wird von ghcr.io gezogen. Bei Updates: **Projekt stoppen → Image neu pullen → Starten**.
+
+**Hinweis:** Ist das GitHub-Repo privat, ist auch das Container-Paket privat. Dann musst du auf der NAS einmal `docker login ghcr.io` ausführen (mit Personal Access Token). Bei öffentlichem Repo kein Login nötig.
+
+---
+
+## 1. Server vorbereiten (SSH-Deploy, optional)
 
 ### Auf 192.168.1.153 ausführen:
 
