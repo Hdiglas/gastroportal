@@ -1,0 +1,387 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Setting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+}
+
+model Account {
+  id              String   @id @default(cuid())
+  name            String
+  email           String
+  imapHost        String   @default("")
+  imapPort        Int      @default(993)
+  imapSecure      Boolean  @default(true)
+  smtpHost        String   @default("")
+  smtpPort        Int      @default(587)
+  smtpSecure      Boolean  @default(true)
+  username        String   @default("")
+  encryptedPassword String @default("")
+  aiSystemPrompt  String   @default("")
+  signature       String   @default("")
+  businessData    String   @default("{}")
+  color           String   @default("#3b82f6")
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  emails       Email[]
+  areas        Area[]
+  reservations Reservation[]
+  contacts     Contact[]
+  templates    Template[]
+}
+
+model Area {
+  id           String  @id @default(cuid())
+  accountId    String
+  name         String
+  type         String  // dining, garden, event_garden, event_salon
+  capacity     Int     @default(0)
+  minPersons   Int?
+  isSeasonal   Boolean @default(false)
+  seasonStart  String? // MM-DD
+  seasonEnd    String? // MM-DD
+  setupOptions String  @default("[]")
+  equipment    String  @default("[]")
+  pricing      String  @default("{}")
+  description  String  @default("")
+  isActive     Boolean @default(true)
+
+  account      Account       @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  reservations Reservation[]
+}
+
+model Email {
+  id          String   @id @default(cuid())
+  accountId   String
+  messageId   String
+  uid         Int?
+  folder      String   @default("INBOX")
+  fromAddress String
+  fromName    String   @default("")
+  toAddress   String
+  subject     String   @default("")
+  textBody    String   @default("")
+  htmlBody    String   @default("")
+  date        DateTime @default(now())
+  isRead      Boolean  @default(false)
+  isStarred   Boolean  @default(false)
+  isAnswered  Boolean  @default(false)
+  category    String?
+  priority    String?
+  aiDraft     String?
+  aiSummary   String?
+  threadId    String?
+  hasAttachments Boolean @default(false)
+  createdAt   DateTime @default(now())
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@unique([accountId, messageId])
+  @@index([accountId, folder])
+  @@index([category])
+}
+
+model Reservation {
+  id              String   @id @default(cuid())
+  accountId       String
+  areaId          String?
+  guestName       String
+  guestEmail      String   @default("")
+  guestPhone      String   @default("")
+  guestCompany    String   @default("")
+  date            DateTime
+  timeFrom        String
+  timeTo          String?
+  persons         Int
+  type            String   @default("table") // table, event
+  eventType       String?
+  setupType       String?
+  cateringOption  String?
+  specialRequests String?
+  status          String   @default("pending") // pending, confirmed, declined, cancelled
+  sourceEmailId   String?
+  sourceType      String   @default("manual") // email, website, phone, walkin, manual
+  externalId      String?  @unique
+  syncedAt        DateTime?
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  area    Area?   @relation(fields: [areaId], references: [id], onDelete: SetNull)
+}
+
+model Contact {
+  id         String   @id @default(cuid())
+  accountId  String
+  email      String
+  name       String   @default("")
+  company    String   @default("")
+  phone      String   @default("")
+  tags       String   @default("[]")
+  notes      String   @default("")
+  visitCount Int      @default(0)
+  lastSeen   DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@unique([accountId, email])
+}
+
+model Template {
+  id        String @id @default(cuid())
+  accountId String
+  category  String
+  name      String
+  subject   String @default("")
+  content   String
+  variables String @default("[]")
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+}
+
+// ========== INTRANET / HR ==========
+
+model Employee {
+  id                  String   @id @default(cuid())
+  vorname             String
+  nachname            String
+  kurzname            String?  // z.B. Markus, Anna - Anzeige im Dienstplan
+  geburtsdatum        String?  // YYYY-MM-DD
+  geschlecht          String?  // m/w/d
+  nationalitaet       String   @default("")
+  sozialversicherungsnr String @default("")
+  steuerId            String   @default("")
+  adresse             String   @default("")
+  plz                 String   @default("")
+  ort                 String   @default("")
+  telefon             String   @default("")
+  emailPrivat         String   @default("")
+  bankName            String   @default("")
+  iban                String   @default("")
+  bic                 String   @default("")
+  position            String   @default("")  // Koch, Kellner, Barista, Schankmitarbeiter...
+  abteilung           String   @default("")
+  lohngruppe          String   @default("")  // KV Lohngruppe
+  eintrittsDatum      String?  // YYYY-MM-DD
+  austrittsDatum      String?  // YYYY-MM-DD
+  vertragsart         String   @default("vollzeit") // vollzeit, teilzeit, geringfuegig
+  wochenstunden       Float    @default(40)
+  gehaltBrutto        Float    @default(0)
+  urlaubstageProJahr  Int      @default(25)
+  urlaubstageRest     Float    @default(25)
+  probezeit           Int      @default(30) // Tage
+  kuendigungsfrist    String   @default("laut KV")
+  pin                 String   @default("")  // gehashter PIN fuer Clock-In
+  loginEmail          String?  @unique
+  passwordHash        String   @default("")
+  rolle               String   @default("mitarbeiter") // admin, mitarbeiter
+  profilBild          String?
+  notizen             String   @default("")
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  documents       EmployeeDocument[]
+  shifts          Shift[]
+  timeEntries     TimeEntry[]
+  leaveRequests   LeaveRequest[]
+  contracts       Contract[]
+  overtimeBalances OvertimeBalance[]
+  sessions        Session[]
+  taskExecutions  TaskExecution[]
+}
+
+model EmployeeDocument {
+  id          String   @id @default(cuid())
+  employeeId  String
+  typ         String   // ausweis, meldezettel, arbeitsgenehmigung, krankenSchein, vertrag, kuendigung, sonstiges
+  dateiname   String
+  dateipfad   String
+  mimeType    String   @default("")
+  gueltigBis  String?  // YYYY-MM-DD
+  notizen     String   @default("")
+  createdAt   DateTime @default(now())
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+}
+
+model Shift {
+  id            String   @id @default(cuid())
+  employeeId    String
+  datum         String   // YYYY-MM-DD
+  vonZeit       String   // HH:mm
+  bisZeit       String   // HH:mm
+  pauseMin      Int      @default(30)
+  sollStunden   Float    @default(0) // auto-berechnet aus von/bis minus pause
+  tage          Float?   // z.B. Urlaub: 1 = ganzer Tag, 0.5 = halber Tag
+  shiftTypeId   String?  // z.B. spat-s, fruh-k - fuer Task-Zuordnung
+  position      String   @default("")
+  bereich       String   @default("")
+  zusatz        String   @default("")  // kleiner Hinweis im Dienstplan, z.B. "Schank"
+  notizen     String   @default("")
+  status      String   @default("geplant") // geplant, bestaetigt, getauscht, abgesagt
+
+  employee      Employee       @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  timeEntry     TimeEntry?
+  taskExecutions TaskExecution[]
+
+  @@index([datum])
+  @@index([employeeId, datum])
+}
+
+model TimeEntry {
+  id              String   @id @default(cuid())
+  employeeId      String
+  shiftId         String?  @unique
+  datum           String   // YYYY-MM-DD
+  clockIn         String?  // HH:mm:ss
+  clockOut        String?  // HH:mm:ss
+  pauseMinuten    Int      @default(0)  // auto: 30min bei >=4h
+  istStunden      Float    @default(0)  // berechnet (tatsaechlich geleistet)
+  feiertagFaktor  Float    @default(1)  // 2 = Feiertagsstunden zaehlen doppelt
+  sollStunden     Float    @default(0)  // aus Shift
+  differenz     Float    @default(0)  // ist - soll (positiv = ueberstunden)
+  status        String   @default("offen") // offen, abgeschlossen, korrigiert
+  zuSpaet       Boolean  @default(false) // true wenn >5min nach Schichtbeginn
+  notizen       String   @default("")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  shift    Shift?   @relation(fields: [shiftId], references: [id], onDelete: SetNull)
+
+  @@index([datum])
+  @@index([employeeId, datum])
+}
+
+model LeaveRequest {
+  id            String   @id @default(cuid())
+  employeeId    String
+  typ           String   // urlaub, krankenstand, zeitausgleich, sonderurlaub
+  vonDatum      String   // YYYY-MM-DD
+  bisDatum      String   // YYYY-MM-DD
+  tage          Float    @default(1)
+  status        String   @default("beantragt") // beantragt, genehmigt, abgelehnt
+  grund         String   @default("")
+  dokumentId    String?  // Verweis auf EmployeeDocument (Krankenbestaetigung)
+  genehmigtVon  String?
+  genehmigtAm   String?  // YYYY-MM-DD
+  notizen       String   @default("")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+}
+
+model Contract {
+  id            String   @id @default(cuid())
+  employeeId    String
+  typ           String   // dienstvertrag, kuendigung_einvernehmlich, kuendigung_dienstgeber, kuendigung_dienstnehmer, zeugnis
+  inhalt        String   // generierter Vertragstext
+  gueltigAb     String?  // YYYY-MM-DD
+  unterschrieben Boolean @default(false)
+  createdAt     DateTime @default(now())
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+}
+
+model OvertimeBalance {
+  id            String @id @default(cuid())
+  employeeId    String
+  monat         String // YYYY-MM
+  sollStunden   Float  @default(0)
+  istStunden    Float  @default(0)
+  ueberstunden  Float  @default(0)
+  kumuliert     Float  @default(0) // Gesamtsaldo bis inkl. diesen Monat
+  createdAt     DateTime @default(now())
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeId, monat])
+}
+
+model Session {
+  id          String   @id @default(cuid())
+  employeeId  String
+  token       String   @unique
+  rolle       String   // admin, mitarbeiter
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+}
+
+// ========== TASKS ==========
+
+model TaskTemplate {
+  id                   String   @id @default(cuid())
+  name                 String
+  type                 String   // checklist, recurring, recipe, workflow
+  intervalMin          Int?     // for recurring, e.g. 90
+  baseLang             String   @default("de")
+  translations         String   @default("{}") // JSON: { "de": { "name": "..." }, "en": { "name": "..." } }
+  assignedShiftTypeIds String   @default("[]") // JSON array, e.g. ["spat-s", "spat-k"]
+  recipeBasePortions   Int?     // for recipe, e.g. 4
+  escalationAfterMin   Int?     // minutes before escalation for recurring
+  isActive             Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  steps      TaskStep[]
+  executions TaskExecution[]
+}
+
+model TaskStep {
+  id                 String   @id @default(cuid())
+  templateId         String
+  order              Int
+  text               String
+  requirePhoto       Boolean  @default(false)
+  referencePhotoPath String?
+  translations       String   @default("{}") // JSON: { "de": "...", "en": "..." }
+  recipeQuantity     Float?   // e.g. 300
+  recipeUnit         String?  // e.g. g, ml, Stk
+
+  template TaskTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@index([templateId])
+}
+
+model TaskExecution {
+  id         String   @id @default(cuid())
+  templateId String
+  shiftId    String?
+  employeeId String?
+  datum      String   // YYYY-MM-DD
+  status     String   @default("in_progress") // in_progress, completed
+  stepsDone  String   @default("[]") // JSON: [{ stepId, doneAt, photoPath? }]
+  windowStart String? // HH:mm for recurring
+  windowEnd   String? // HH:mm for recurring
+  recipePortions Int? // scaled portions for recipe execution
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  template TaskTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  shift    Shift?       @relation(fields: [shiftId], references: [id], onDelete: SetNull)
+  employee Employee?    @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+
+  @@index([templateId])
+  @@index([datum])
+  @@index([shiftId])
+  @@index([employeeId, datum])
+}

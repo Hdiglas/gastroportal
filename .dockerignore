@@ -1,0 +1,10 @@
+node_modules
+.next
+.git
+.env
+.env.*
+*.md
+data
+.DS_Store
+*.log
+docs/DATABASE-SETUP.md

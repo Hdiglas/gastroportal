@@ -1,0 +1,10 @@
+services:
+  gastromail:
+    build: .
+    container_name: gastromail
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - ENCRYPTION_SECRET=${ENCRYPTION_SECRET:-gastromail-change-this-secret}
+    restart: unless-stopped

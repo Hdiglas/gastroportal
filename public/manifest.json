@@ -1,0 +1,9 @@
+{
+  "name": "GastroMail Tasks",
+  "short_name": "Tasks",
+  "description": "Checklisten, Rezepte und Ablaeufe fuer Gastronomie",
+  "start_url": "/tasks",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6"
+}
