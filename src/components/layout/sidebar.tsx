@@ -29,10 +29,17 @@ import {
   FileEdit,
   ChefHat,
   Play,
+  Euro,
+  Receipt,
+  FileX,
+  Activity,
+  Table2,
+  LogOut,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { cn } from "@/lib/utils";
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 const mainNav = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -72,8 +79,20 @@ const tasksNav = [
   { href: "/tasks/audit", label: "Audit / Export", icon: ClipboardList },
 ];
 
+const umsatzNav = [
+  { href: "/umsatz", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/umsatz/kellner", label: "Kellner-Analyse", icon: Users },
+  { href: "/umsatz/visits", label: "Tische / Besuche", icon: Table2 },
+  { href: "/umsatz/products", label: "Produkte & Umsatz", icon: LayoutDashboard },
+  { href: "/umsatz/articles", label: "Artikelimport", icon: Database },
+  { href: "/umsatz/journal", label: "Bonier-Journal", icon: Receipt },
+  { href: "/umsatz/stornos", label: "Stornos", icon: FileX },
+  { href: "/umsatz/live", label: "Live-Stand", icon: Activity },
+];
+
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
   const [appDropdownOpen, setAppDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -81,10 +100,11 @@ export function Sidebar() {
   const isSettings = pathname.startsWith("/settings");
   const isIntranet = pathname.startsWith("/intranet");
   const isTasks = pathname.startsWith("/tasks");
+  const isUmsatz = pathname.startsWith("/umsatz");
 
-  const nav = isTasks ? tasksNav : isIntranet ? intranetNav : isSettings ? settingsNav : mainNav;
-  const sectionLabel = isTasks ? "Tasks" : isIntranet ? "Intranet" : isSettings ? "Einstellungen" : "Navigation";
-  const appLabel = isTasks ? "Tasks" : isIntranet ? "Intranet" : "GastroMail";
+  const nav = isUmsatz ? umsatzNav : isTasks ? tasksNav : isIntranet ? intranetNav : isSettings ? settingsNav : mainNav;
+  const sectionLabel = isUmsatz ? "Umsatz" : isTasks ? "Tasks" : isIntranet ? "Intranet" : isSettings ? "Einstellungen" : "Navigation";
+  const appLabel = isUmsatz ? "Umsatz" : isTasks ? "Tasks" : isIntranet ? "Intranet" : "GastroMail";
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -95,6 +115,16 @@ export function Sidebar() {
     window.addEventListener("click", handleClick);
     return () => window.removeEventListener("click", handleClick);
   }, []);
+
+  async function handleLogout() {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch {
+      // ignore
+    } finally {
+      router.replace("/login");
+    }
+  }
 
   return (
     <aside
@@ -120,7 +150,7 @@ export function Sidebar() {
                   onClick={() => setAppDropdownOpen(false)}
                   className={cn(
                     "flex items-center gap-2.5 px-3 py-2 text-sm transition-colors hover:bg-[hsl(var(--accent))]",
-                    !isIntranet && !isSettings && "font-medium text-[hsl(var(--primary))]"
+                    !isIntranet && !isSettings && !isTasks && !isUmsatz && "font-medium text-[hsl(var(--primary))]"
                   )}
                 >
                   <Mail className="h-4 w-4" />
@@ -148,6 +178,17 @@ export function Sidebar() {
                   <ListChecks className="h-4 w-4" />
                   Tasks
                 </Link>
+                <Link
+                  href="/umsatz"
+                  onClick={() => setAppDropdownOpen(false)}
+                  className={cn(
+                    "flex items-center gap-2.5 px-3 py-2 text-sm transition-colors hover:bg-[hsl(var(--accent))]",
+                    isUmsatz && "font-medium text-[hsl(var(--primary))]"
+                  )}
+                >
+                  <Euro className="h-4 w-4" />
+                  Umsatz
+                </Link>
               </div>
             )}
           </div>
@@ -169,7 +210,7 @@ export function Sidebar() {
           )}
           {nav.map((item) => {
             const Icon = item.icon;
-            const active = pathname === item.href || (item.href !== "/intranet" && item.href !== "/tasks" && pathname.startsWith(item.href + "/"));
+            const active = pathname === item.href || (item.href !== "/intranet" && item.href !== "/tasks" && item.href !== "/umsatz" && pathname.startsWith(item.href + "/"));
             return (
               <Link
                 key={item.href}
@@ -192,17 +233,15 @@ export function Sidebar() {
 
       <div className="border-t border-[hsl(var(--sidebar-border))] p-2">
         <ThemeToggle collapsed={collapsed} />
-        {isTasks ? (
-          <>
-            <Link
-              href="/inbox"
-              className="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--sidebar-accent))] transition-colors"
-              title="Zurueck zu E-Mail"
-            >
-              <Mail className="h-4 w-4 shrink-0" />
-              {!collapsed && <span>Zurueck zu E-Mail</span>}
-            </Link>
-          </>
+        {isTasks || isUmsatz ? (
+          <Link
+            href="/inbox"
+            className="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--sidebar-accent))] transition-colors"
+            title="Zurueck zu E-Mail"
+          >
+            <Mail className="h-4 w-4 shrink-0" />
+            {!collapsed && <span>Zurueck zu E-Mail</span>}
+          </Link>
         ) : isIntranet ? (
           <>
             <Link
@@ -241,6 +280,14 @@ export function Sidebar() {
             )}
           </Link>
         )}
+        <button
+          onClick={handleLogout}
+          className="mt-2 flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--sidebar-accent))] transition-colors"
+          title="Abmelden"
+        >
+          <LogOut className="h-4 w-4 shrink-0" />
+          {!collapsed && <span>Abmelden</span>}
+        </button>
       </div>
     </aside>
   );

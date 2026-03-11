@@ -69,7 +69,10 @@ export async function chatCompletion(
 
   const effort = opts.thinkingEffort ?? "normal";
 
-  const shouldThink = thinkingEnabled && effort !== "minimal";
+  // For strict JSON outputs we disable thinking to avoid any <think> tags
+  // or non-JSON pre/postfix that could break JSON.parse on the caller side.
+  const wantsThinking = thinkingEnabled && effort !== "minimal";
+  const shouldThink = wantsThinking && !opts.format;
   const thinkTokens = shouldThink
     ? Math.round(thinkingBudget * EFFORT_MULTIPLIERS[effort])
     : 0;
@@ -117,8 +120,14 @@ export async function chatCompletion(
 
   const result = await response.json();
 
-  const rawContent = result.message?.content || "";
-  const thinkingContent = result.message?.thinking || "";
+  const messageContent = result.message?.content ?? "";
+  const rawContent =
+    typeof messageContent === "string"
+      ? messageContent
+      : JSON.stringify(messageContent);
+  const thinkingRaw = result.message?.thinking ?? "";
+  const thinkingContent =
+    typeof thinkingRaw === "string" ? thinkingRaw : JSON.stringify(thinkingRaw);
   const content = stripThinkingTokens(rawContent);
 
   return { content, raw: rawContent, thinkingContent };

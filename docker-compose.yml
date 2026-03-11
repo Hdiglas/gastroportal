@@ -7,4 +7,9 @@ services:
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - ENCRYPTION_SECRET=${ENCRYPTION_SECRET:-gastromail-change-this-secret}
+      - UMSATZ_DB_HOST=${UMSATZ_DB_HOST:-192.168.1.153}
+      - UMSATZ_DB_PORT=${UMSATZ_DB_PORT:-44391}
+      - UMSATZ_DB_NAME=${UMSATZ_DB_NAME:-Master}
+      - UMSATZ_DB_USER=${UMSATZ_DB_USER:-hdiglas}
+      - UMSATZ_DB_PASSWORD=${UMSATZ_DB_PASSWORD}
     restart: unless-stopped
