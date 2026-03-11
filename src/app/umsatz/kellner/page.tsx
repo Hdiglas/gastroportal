@@ -225,7 +225,7 @@ export default function KellnerPage() {
                           ? Number(c.revenue)
                           : 0;
                       const maxRevenue = Math.max(
-                        ...detail.categories.map((x) =>
+                        ...(detail.categories ?? []).map((x) =>
                           x.revenue != null && !Number.isNaN(Number(x.revenue))
                             ? Number(x.revenue)
                             : 0
