@@ -1,5 +1,8 @@
 "use client";
 
+// Diese Seite nutzt useSearchParams und soll nur dynamisch gerendert werden.
+export const dynamic = "force-dynamic";
+
 import { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
